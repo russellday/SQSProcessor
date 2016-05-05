@@ -16,42 +16,23 @@ var sqs = new aws.SQS({
     }
 });
 
-var sqsTarget1 = new aws.SQS({
-    region: config.REGION,
-    params: {
-        QueueUrl: config.TARGET_SQS_QUEUE_1
-    }
-});
-
-var sqsTarget2 = new aws.SQS({
-    region: config.REGION,
-    params: {
-        QueueUrl: config.TARGET_SQS_QUEUE_2
-    }
-});
-
-
 //not using event based lamba, leaving this empty
 exports.handler = function(event, context) {
 }  
 
 var receiveMessage = Q.nbind( sqs.receiveMessage, sqs );
 var deleteMessage = Q.nbind( sqs.deleteMessage, sqs );
-var sendMessageTarget1 = Q.nbind( sqsTarget1.sendMessage, sqsTarget1 );
-var sendMessageTarget2 = Q.nbind( sqsTarget2.sendMessage, sqsTarget2 );
-
-var parent_sourcemsgId = "";
-var parent_sourcemsgBody = "";
-var parent_receipthandle = "";
+var sendMessage = Q.nbind( sqs.SendMessage, sqs );
 
 //Long Pole the queue
 (function pollQueueForMessages() {
 
-    console.log( chalk.yellow( "Starting poll operation." ) );
+    console.log( chalk.yellow( "Starting long-poll operation." ) );
 
     receiveMessage({
         WaitTimeSeconds: 0,
-        VisibilityTimeout: 10
+        VisibilityTimeout: 10,
+        MaxNumberOfMessages: 1
     })
     .then(
         function handleMessageResolve( data ) {
@@ -73,47 +54,37 @@ var parent_receipthandle = "";
             var msg = msgId + ' ' + msgBody;
             
             console.log( chalk.green( "Processing Message:", msg ));
-            
-            parent_sourcemsgId = msgId;
-            parent_sourcemsgBody = msgBody;
-            parent_receipthandle = data.Messages[ 0 ].ReceiptHandle;
-            
+
+            var queues = config.TARGETS;
+            var length = queues.length;  
+            var simulateFail = false; 
+            var delay = 0;
+            for (var i = 0; i < length; i++) {
+                if(i == 1){
+                    //simulateFail = true;
+                    delay = 500;
+                }
+                //SendMessage(queues[i], msgBody, simulateFail);
+                SendMessageWrapper(queues[i], msgBody, simulateFail, delay);
+            }
+
+            //console.log( chalk.green( "Deleting:", msgId ) );
+
             return(
-                sendMessageTarget1({
-                    MessageBody: data.Messages[ 0 ].Body
+                deleteMessage({
+                    ReceiptHandle: data.Messages[ 0 ].ReceiptHandle
                 })
             );
+
         }
     )
     .then(
-        function handleSendTarget1Resolve( data ) {
-            //console.log("handleSendTarget1_Resolve - data: ", data);
-            console.log( chalk.green("Sending to Target Queue 1"));
-            return(
-                sendMessageTarget2({
-                    MessageBody: parent_sourcemsgBody
-                })
-            );
-        }
-    )    
-    .then(
-        function handleSendTarget2Resolve( data ) {
-            //console.log("handleSendTarget2_Resolve - data: ", data);
-            //console.log("debug", parent_sourcemsgId);
-            console.log( chalk.green("Sending to Target Queue 2"));
-            return(
-                deleteMessage({
-                    ReceiptHandle: parent_receipthandle
-                })
-            );
-        }
-    )     
-    .then(
         function handleDeleteResolve( data ) {
-            var msg = "Message Deleted: " + parent_sourcemsgId;
+            var msg = "Message Deleted: " + Date.now();
             console.log( chalk.green( msg ) );
         }
     )
+    // Catch any error (or rejection) that took place during processing.
     .catch(
         function handleError( error ) {
             switch ( error.type ) {
@@ -130,7 +101,42 @@ var parent_receipthandle = "";
         }
     )
     .finally( pollQueueForMessages );
+
 })();
+
+function SendMessageWrapper (url, body, simulateFailure, delay){       
+    setTimeout(function () {
+        SendMessage (url, body, simulateFailure);
+    }, delay)
+}
+
+function SendMessage (url, body, simulateFailure){
+    
+    if(simulateFailure){
+        throw(
+            workflowError(
+                "SimulateFailure",
+                new Error( "Simulated failure." )
+            )
+        ); 
+    }
+    
+    var sqsSend = new aws.SQS({
+        region: config.REGION,
+    });
+
+    var msg = body;
+    var sqsParams = {
+        MessageBody: body,
+        QueueUrl: url
+    };
+
+    sqs.sendMessage(sqsParams, function(err, data) {
+        var msg = "Message Sent: " + Date.now() + " " + data.ResponseMetadata;
+        console.log( msg );
+    }); 
+
+}
 
 function workflowError( type, error ) {
     error.type = type;

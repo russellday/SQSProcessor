@@ -58,7 +58,7 @@ for f in $(ls -1|grep ^Lambda); do
       --role arn:aws:iam::$AWS_ACCOUNT_ID:role/${f} \
       --handler index.handler \
       --zip-file fileb://${f}.zip \
-      --timeout 10
+      --timeout 60
 	sleep 1 # To avoid errors
   cd ..
   echo "Creating function $f end"
