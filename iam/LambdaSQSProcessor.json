@@ -7,6 +7,14 @@
       ],
       "Effect": "Allow",
       "Resource": "*"
+    },
+    {
+        "Sid": "",
+        "Resource": "*",
+        "Action": [
+            "logs:*"
+        ],
+        "Effect": "Allow"
     }
   ]
 }

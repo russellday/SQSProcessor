@@ -28,7 +28,7 @@ for f in $(ls -1); do
   cd $f
 
   zip -r $f.zip index.js config.json node_modules
-  aws lambda update-function-code --function-name ${f} --zip-file fileb://${f}.zip 
+  aws lambda update-function-code --function-name ${f} --zip-file fileb://${f}.zip
 	rm config.json
 	rm $f.zip
   cd ..

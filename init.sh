@@ -20,20 +20,6 @@ REGION=$(jq -r '.REGION' config.json)
 
 cd iam
 
-#below can be used if you need to parameterize the functions/roles
-#if [ -d "edit" ]; then
-#  rm edit/*
-#else
-#  mkdir edit
-#fi
-
-#for f in $(ls -1 trust*); do
-#  echo "Editing trust from $f begin..."
-#  sed -e "s/<AWS_ACCOUNT_ID>/$AWS_ACCOUNT_ID/g" 
-#      $f > edit/$f
-#  echo "Editing trust from $f end"
-#done
-
 # Create IAM Roles for Lambda Function
 for f in $(ls -1 Lambda*); do
   role="${f%.*}"
@@ -58,7 +44,7 @@ for f in $(ls -1|grep ^Lambda); do
       --role arn:aws:iam::$AWS_ACCOUNT_ID:role/${f} \
       --handler index.handler \
       --zip-file fileb://${f}.zip \
-      --timeout 60
+      --timeout 30
 	sleep 1 # To avoid errors
   cd ..
   echo "Creating function $f end"

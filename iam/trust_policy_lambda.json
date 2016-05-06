@@ -8,6 +8,15 @@
         "Service": "lambda.amazonaws.com"
       },
       "Action": "sts:AssumeRole"
-    }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }    
   ]
 }
