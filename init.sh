@@ -31,6 +31,8 @@ for f in $(ls -1 Lambda*); do
   echo "Creating role $role end"
 done
 
+sleep 5 # To avoid errors
+
 cd ..
 
 # Create Lambda Functions
@@ -45,7 +47,7 @@ for f in $(ls -1|grep ^Lambda); do
       --handler index.handler \
       --zip-file fileb://${f}.zip \
       --timeout 30
-	sleep 1 # To avoid errors
+	sleep 5 # To avoid errors
   cd ..
   echo "Creating function $f end"
 done

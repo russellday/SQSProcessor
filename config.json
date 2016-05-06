@@ -1,7 +1,6 @@
 {
   "AWS_ACCOUNT_ID": "831402888584",
   "REGION": "us-west-2",
-  "TIMEOUT": "30",
   "SOURCE_SQS_QUEUE": "https://sqs.us-west-2.amazonaws.com/831402888584/SourceQueue",
   "TARGET_SQS_QUEUE_1": "https://sqs.us-west-2.amazonaws.com/831402888584/TargetQueue1",
   "TARGET_SQS_QUEUE_2": "https://sqs.us-west-2.amazonaws.com/831402888584/TargetQueue2"
