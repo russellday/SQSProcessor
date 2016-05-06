@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "sqs:*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+        "Sid": "",
+        "Resource": "*",
+        "Action": [
+            "logs:*"
+        ],
+        "Effect": "Allow"
+    }
+  ]
+}
